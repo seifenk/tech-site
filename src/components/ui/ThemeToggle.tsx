@@ -4,6 +4,7 @@ import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
+import { flushSync } from "react-dom";
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -19,9 +20,61 @@ export function ThemeToggle() {
 
   const isDark = resolvedTheme === "dark";
 
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const newTheme = isDark ? "light" : "dark";
+    const doc = document as any;
+
+    if (!doc.startViewTransition) {
+      setTheme(newTheme);
+      return;
+    }
+
+    // Get the click position, or fallback to top right
+    const x = e.clientX ?? window.innerWidth - 32;
+    const y = e.clientY ?? 32;
+    
+    // Calculate the distance to the farthest corner
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    // Add a class to disable default CSS transitions during the View Transition
+    document.documentElement.classList.add("view-transitioning");
+
+    const transition = doc.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(newTheme);
+      });
+    });
+
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+      
+      document.documentElement.animate(
+        {
+          clipPath: clipPath,
+        },
+        {
+          duration: 500,
+          easing: "ease-out",
+          // Animate the new view coming in over the old view
+          pseudoElement: "::view-transition-new(root)",
+        }
+      );
+    });
+
+    transition.finished.then(() => {
+      document.documentElement.classList.remove("view-transitioning");
+    });
+  };
+
   return (
     <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggleTheme}
       className="relative flex items-center w-[64px] h-[32px] rounded-full p-1 bg-surface border border-border transition-all hover:border-primary/50 focus:outline-none overflow-hidden shrink-0 group"
       aria-label="Toggle theme"
     >

@@ -3,6 +3,7 @@ import { Syne, Manrope } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const syne = Syne({
   variable: "--font-syne",
@@ -28,17 +29,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh" className={`${syne.variable} ${manrope.variable} dark`}>
-      <body className="min-h-screen flex flex-col antialiased relative selection:bg-primary/30 selection:text-white">
-        {/* Background Decorative Blobs */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] opacity-60">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] mix-blend-screen animate-blob" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/20 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: "2s" }} />
-        </div>
-        
-        <Navbar />
-        <main className="flex-1 w-full relative z-10 flex flex-col">{children}</main>
-        <Footer />
+    <html lang="zh" className={`${syne.variable} ${manrope.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col antialiased relative selection:bg-primary/30 selection:text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* Background Decorative Blobs */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] opacity-60">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] mix-blend-screen animate-blob" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/20 blur-[120px] mix-blend-screen animate-blob" style={{ animationDelay: "2s" }} />
+          </div>
+          
+          <Navbar />
+          <main className="flex-1 w-full relative z-10 flex flex-col">{children}</main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

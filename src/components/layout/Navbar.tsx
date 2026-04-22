@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Menu, X, Cpu } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { name: "首页", href: "/" },
@@ -58,8 +59,9 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* CTA Button */}
-        <div className="hidden md:block">
+        {/* Actions (CTA + ThemeToggle) */}
+        <div className="hidden md:flex items-center gap-4">
+          <ThemeToggle />
           <Link href="/contact">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -72,13 +74,16 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden text-slate-300 hover:text-white"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile Menu Toggle & Theme Toggle */}
+        <div className="flex md:hidden items-center gap-4">
+          <ThemeToggle />
+          <button
+            className="text-slate-300 hover:text-white"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Nav */}

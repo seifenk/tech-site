@@ -24,7 +24,11 @@ export function ThemeToggle() {
     const newTheme = isDark ? "light" : "dark";
     const doc = document as any;
 
-    if (!doc.startViewTransition) {
+    const isMobile = window.innerWidth < 768;
+    const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // 移动端由于 Safari 的硬件加速兼容性导致卡屏，强制回退无动画秒切
+    if (!doc.startViewTransition || isReducedMotion || isMobile) {
       setTheme(newTheme);
       return;
     }
@@ -32,15 +36,18 @@ export function ThemeToggle() {
     // Get the click position, or fallback to top right
     const x = e.clientX ?? window.innerWidth - 32;
     const y = e.clientY ?? 32;
-    
+
     // Calculate the distance to the farthest corner
     const endRadius = Math.hypot(
       Math.max(x, window.innerWidth - x),
       Math.max(y, window.innerHeight - y)
     );
 
+    const isSwitchingToDark = newTheme === "dark";
+
     // Add a class to disable default CSS transitions during the View Transition
     document.documentElement.classList.add("view-transitioning");
+    document.documentElement.classList.add(isSwitchingToDark ? "transitioning-to-dark" : "transitioning-to-light");
 
     const transition = doc.startViewTransition(() => {
       flushSync(() => {
@@ -49,26 +56,33 @@ export function ThemeToggle() {
     });
 
     transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ];
-      
+      const clipPath = isSwitchingToDark
+        ? [
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+            `circle(0px at ${x}px ${y}px)`,
+          ]
+        : [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+          ];
+
       document.documentElement.animate(
         {
           clipPath: clipPath,
         },
         {
           duration: 500,
-          easing: "ease-out",
-          // Animate the new view coming in over the old view
-          pseudoElement: "::view-transition-new(root)",
+          easing: isSwitchingToDark ? "ease-in" : "ease-out",
+          // Animate the old view shrinking when going to dark, new view expanding when going to light
+          pseudoElement: isSwitchingToDark ? "::view-transition-old(root)" : "::view-transition-new(root)",
         }
       );
     });
 
     transition.finished.then(() => {
       document.documentElement.classList.remove("view-transitioning");
+      document.documentElement.classList.remove("transitioning-to-dark");
+      document.documentElement.classList.remove("transitioning-to-light");
     });
   };
 
